@@ -30,19 +30,31 @@ export default function Sidebar() {
         <nav className="space-y-1">
           <Link 
             href="/dashboard" 
-            className="block px-4 py-2.5 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors"
+            className={`block px-4 py-2.5 rounded-lg transition-colors ${
+              window.location.pathname === '/dashboard'
+                ? 'bg-blue-50 text-blue-700'
+                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+            }`}
           >
             {TEXT.dashboard.overview}
           </Link>
           <Link 
             href="/dashboard/words" 
-            className="block px-4 py-2.5 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors"
+            className={`block px-4 py-2.5 rounded-lg transition-colors ${
+              window.location.pathname === '/dashboard/words'
+                ? 'bg-blue-50 text-blue-700'
+                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+            }`}
           >
             {TEXT.dashboard.wordList}
           </Link>
           <Link 
             href="/dashboard/study" 
-            className="block px-4 py-2.5 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors"
+            className={`block px-4 py-2.5 rounded-lg transition-colors ${
+              window.location.pathname === '/dashboard/study'
+                ? 'bg-blue-50 text-blue-700'
+                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+            }`}
           >
             {TEXT.dashboard.study}
           </Link>
@@ -64,7 +76,11 @@ export default function Sidebar() {
         <div className="space-y-1">
           <Link 
             href="/dashboard/settings" 
-            className="block px-4 py-2 text-gray-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors text-sm"
+            className={`block px-4 py-2 text-sm rounded-lg transition-colors ${
+              window.location.pathname === '/dashboard/settings'
+                ? 'bg-blue-50 text-blue-700'
+                : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
+            }`}
           >
             {TEXT.dashboard.settings.title}
           </Link>
