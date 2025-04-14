@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
 import { TEXT } from '@/lib/constants/text'
+import Link from 'next/link'
 
 export default function Navbar() {
   const router = useRouter()
@@ -18,9 +19,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              {TEXT.dashboard.title}
-            </h1>
+            <Link href="/" className="transition-opacity hover:opacity-80">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {TEXT.dashboard.title}
+              </h1>
+            </Link>
           </div>
           <div className="flex items-center">
             <Button 

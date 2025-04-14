@@ -3,25 +3,83 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useEffect, useState } from "react"
+import { fetchUserWordCloudData } from "@/lib/services/wordcloud"
 
 export default function WordCloudWidget() {
   const [words, setWords] = useState<{text: string, value: number}[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Mock data - replace with actual data fetching
-    setWords([
-      { text: 'vocabulary', value: 30 },
-      { text: 'learning', value: 25 },
-      { text: 'English', value: 20 },
-      { text: 'practice', value: 15 },
-      { text: 'study', value: 10 },
-    ])
+    async function loadWordCloudData() {
+      try {
+        setIsLoading(true)
+        const wordData = await fetchUserWordCloudData()
+        setWords(wordData)
+      } catch (err) {
+        console.error("Failed to load word cloud data", err)
+        setError("无法加载您的词云数据")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadWordCloudData()
   }, [])
 
+  // 加载状态
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>词云 | Word Cloud</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-48 flex items-center justify-center">
+            <p>加载中...</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // 错误状态
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>词云 | Word Cloud</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-48 flex items-center justify-center">
+            <p className="text-red-500">{error}</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // 无数据状态
+  if (words.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>词云 | Word Cloud</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-48 flex items-center justify-center">
+            <p>开始学习新单词，观察您的词云成长！</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // 词云展示
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Word Cloud</CardTitle>
+        <CardTitle>词云 | Word Cloud</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-48 flex flex-wrap items-center justify-center gap-4">
@@ -30,7 +88,7 @@ export default function WordCloudWidget() {
               key={index}
               className="inline-block transition-transform hover:scale-110"
               style={{
-                fontSize: `${word.value / 2}px`,
+                fontSize: `${Math.min(40, word.value)}px`, // 限制最大字体大小
                 color: `hsl(${(index * 60) % 360}, 70%, 50%)`,
               }}
             >
