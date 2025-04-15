@@ -15,19 +15,25 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
-import type { Category, Word } from "@/types/word"
+import type { Category, Word } from "@/lib/types/word"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 
 const formSchema = z.object({
+  // 现有字段
   term: z.string().min(1, "单词不能为空"),
   definition: z.string().min(1, "定义不能为空"),
   example: z.string().optional(),
   category_id: z.string().min(1, "请选择分类"),
   difficulty: z.number().min(1).max(5),
   notes: z.string().optional(),
-})
+  // 新增字段
+  phonetic_us: z.string().optional(),
+  phonetic_uk: z.string().optional(),
+  pos: z.string().optional(),
+  word_id: z.string().optional(),
+});
 
 type FormValues = z.infer<typeof formSchema>
 
@@ -49,6 +55,11 @@ export function EditWordDialog({ open, onOpenChange, word, categories, onSave }:
       category_id: word.category_id,
       difficulty: word.difficulty,
       notes: word.notes || "",
+      // 添加新字段的默认值
+      phonetic_us: word.phonetic_us || "",
+      phonetic_uk: word.phonetic_uk || "",
+      pos: word.pos || "",
+      word_id: word.word_id || "",
     },
   })
 
@@ -61,6 +72,11 @@ export function EditWordDialog({ open, onOpenChange, word, categories, onSave }:
       category_id: word.category_id,
       difficulty: word.difficulty,
       notes: word.notes || "",
+      // 添加新字段的重置值
+      phonetic_us: word.phonetic_us || "",
+      phonetic_uk: word.phonetic_uk || "",
+      pos: word.pos || "",
+      word_id: word.word_id || "",
     })
   }, [word, form])
 
@@ -90,6 +106,51 @@ export function EditWordDialog({ open, onOpenChange, word, categories, onSave }:
                   <FormLabel>单词</FormLabel>
                   <FormControl>
                     <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* 添加新字段 */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="phonetic_us"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>美式音标</FormLabel>
+                    <FormControl>
+                      <Input placeholder="美式音标..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phonetic_uk"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>英式音标</FormLabel>
+                    <FormControl>
+                      <Input placeholder="英式音标..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="pos"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>词性</FormLabel>
+                  <FormControl>
+                    <Input placeholder="例如: n. / v. / adj. / adv." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

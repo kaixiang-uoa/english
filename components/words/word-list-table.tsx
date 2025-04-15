@@ -92,68 +92,52 @@ export function WordListTable({ words, categories, onDelete, onUpdate }: WordLis
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[200px]">单词</TableHead>
-                <TableHead className="hidden md:table-cell">定义</TableHead>
-                <TableHead className="hidden md:table-cell">分类</TableHead>
-                <TableHead className="hidden md:table-cell">难度</TableHead>
-                <TableHead className="hidden md:table-cell">上次学习</TableHead>
-                <TableHead className="w-[100px]">操作</TableHead>
+                <TableHead>单词</TableHead>
+                <TableHead>音标</TableHead>
+                <TableHead>词性</TableHead>
+                <TableHead>释义</TableHead>
+                <TableHead>分类</TableHead>
+                <TableHead>难度</TableHead>
+                <TableHead>上次复习</TableHead>
+                <TableHead>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {words.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    没有找到单词，请尝试调整筛选条件或添加新单词
+              {words.map((word) => (
+                <TableRow key={word.id}>
+                  <TableCell className="font-medium">{word.term}</TableCell>
+                  <TableCell>
+                    {word.phonetic_us && <span>美 [{word.phonetic_us}]</span>}
+                    {word.phonetic_uk && word.phonetic_us && <span className="mx-1">|</span>}
+                    {word.phonetic_uk && <span>英 [{word.phonetic_uk}]</span>}
+                  </TableCell>
+                  <TableCell>{word.pos}</TableCell>
+                  <TableCell>{word.definition}</TableCell>
+                  <TableCell>{word.category_id ? getCategoryName(word.category_id) : "未分类"}</TableCell>
+                  <TableCell>{getDifficultyBadge(word.difficulty)}</TableCell>
+                  <TableCell>{formatDate(word.last_review_at || null)}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">打开菜单</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditClick(word)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          编辑
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteClick(word)} className="text-red-600">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          删除
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ) : (
-                words.map((word) => (
-                  <TableRow key={word.id}>
-                    <TableCell className="font-medium text-gray-900 dark:text-white">{word.term}</TableCell>
-                    <TableCell className="hidden md:table-cell max-w-[300px] truncate text-gray-800 dark:text-gray-300">{word.definition}</TableCell>
-                    <TableCell className="hidden md:table-cell text-gray-700 dark:text-gray-300">{getCategoryName(word.category_id)}</TableCell>
-                    <TableCell className="hidden md:table-cell">{getDifficultyBadge(word.difficulty)}</TableCell>
-                    <TableCell className="hidden md:table-cell text-gray-700 dark:text-gray-300">{formatDate(word.last_review_at)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end space-x-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleEditClick(word)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEditClick(word)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              <span>编辑</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                onUpdate({
-                                  ...word,
-                                  last_review_at: new Date().toISOString(),
-                                })
-                              }}
-                            >
-                              <BookOpen className="mr-2 h-4 w-4" />
-                              <span>标记为已学习</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteClick(word)} className="text-red-600">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              <span>删除</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
+              ))}
             </TableBody>
           </Table>
         </div>

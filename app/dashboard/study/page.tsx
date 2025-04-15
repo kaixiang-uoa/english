@@ -92,7 +92,7 @@ export default function StudyPage() {
 
     // Filter by categories if any are selected
     if (sessionConfig.categories.length > 0) {
-      filteredWords = filteredWords.filter((word) => sessionConfig.categories.includes(word.category_id))
+      filteredWords = filteredWords.filter((word) => word.category_id && sessionConfig.categories.includes(word.category_id))
     }
 
     // Filter by difficulty

@@ -25,6 +25,11 @@ const formSchema = z.object({
   category_id: z.string().min(1, "请选择分类"),
   difficulty: z.number().min(1).max(5),
   notes: z.string().optional(),
+  // 添加新字段
+  phonetic_us: z.string().optional(),
+  phonetic_uk: z.string().optional(),
+  pos: z.string().optional(),
+  word_id: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -47,14 +52,25 @@ export function AddWordDialog({ open, onOpenChange, categories, onAddWord, isSub
       category_id: "",
       difficulty: 3,
       notes: "",
+      // 添加新字段的默认值
+      phonetic_us: "",
+      phonetic_uk: "",
+      pos: "",
+      word_id: "",
     },
   })
 
   const onSubmit = (values: FormValues) => {
-    onAddWord({
+    onAddWord(toWordPayload(values))
+  }
+
+  function toWordPayload(values: FormValues): Omit<Word, "id" | "created_at" | "user_id"> {
+    return {
       ...values,
       last_review_at: null,
-    })
+      reviewed: false,
+      review_count: 0,
+    }
   }
 
   return (
@@ -75,6 +91,51 @@ export function AddWordDialog({ open, onOpenChange, categories, onAddWord, isSub
                   <FormLabel>单词</FormLabel>
                   <FormControl>
                     <Input placeholder="输入单词..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* 添加新字段 */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="phonetic_us"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>美式音标</FormLabel>
+                    <FormControl>
+                      <Input placeholder="美式音标..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phonetic_uk"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>英式音标</FormLabel>
+                    <FormControl>
+                      <Input placeholder="英式音标..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="pos"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>词性</FormLabel>
+                  <FormControl>
+                    <Input placeholder="例如: n. / v. / adj. / adv." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
