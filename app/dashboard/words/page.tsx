@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import Navbar from "@/components/dashboard/Navbar";
@@ -25,9 +25,7 @@ export default function WordListPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<
-    "alphabetical" | "studyTime" | "difficulty"
-  >("alphabetical");
+  const [sortBy, setSortBy] = useState<"alphabetical" | "studyTime" | "difficulty">("alphabetical");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [isAddWordOpen, setIsAddWordOpen] = useState(false);
   const [isImportWordsOpen, setIsImportWordsOpen] = useState(false);
@@ -55,7 +53,7 @@ export default function WordListPage() {
     checkAuth();
   }, [router]);
 
-  const fetchWords = async () => {
+  const fetchWords = async (isInitial = false) => {
     setLoading(true);
     try {
       // 构建基础查询 - 先调用 select
@@ -116,28 +114,8 @@ export default function WordListPage() {
         return;
       }
 
-      // 只在前端处理排序
-      let sortedData = [...(data || [])];
-      sortedData.sort((a, b) => {
-        if (sortBy === "alphabetical") {
-          return sortOrder === "asc"
-            ? a.term.localeCompare(b.term)
-            : b.term.localeCompare(a.term);
-        } else if (sortBy === "studyTime") {
-          return sortOrder === "asc"
-            ? new Date(a.last_review_at || 0).getTime() -
-                new Date(b.last_review_at || 0).getTime()
-            : new Date(b.last_review_at || 0).getTime() -
-                new Date(a.last_review_at || 0).getTime();
-        } else {
-          return sortOrder === "asc"
-            ? a.difficulty - b.difficulty
-            : b.difficulty - a.difficulty;
-        }
-      });
-
-      setWords(sortedData);
-      setFilteredWords(sortedData);
+      // 设置结果
+      setWords(data || []);
     } catch (error) {
       console.error("Unexpected error fetching words:", error);
     } finally {
@@ -156,15 +134,47 @@ export default function WordListPage() {
     setCurrentPage(1); // 切换每页数量时通常重置到第1页
   };
 
-  // 翻页
+  // 初始加载和分页条件变化时获取数据
   useEffect(() => {
     fetchWords();
   }, [currentPage, pageSize]);
   
-  // 搜索
+  // 当筛选条件变化时，重置分页并获取新数据
   useEffect(() => {
-    setCurrentPage(1)
-  }, [searchQuery, selectedCategory])
+    // 只有当这些值不是初始状态时才设置当前页为1
+    if (searchQuery || selectedCategory !== "all" || selectedPos !== "all") {
+      setCurrentPage(1);
+    }
+    fetchWords();
+  }, [searchQuery, selectedCategory, selectedPos]);
+
+  // 使用 useMemo 来优化排序逻辑，避免不必要的重新排序
+  const sortedWords = useMemo(() => {
+    if (!words.length) return [];
+    
+    return [...words].sort((a, b) => {
+      if (sortBy === "alphabetical") {
+        return sortOrder === "asc"
+          ? a.term.localeCompare(b.term)
+          : b.term.localeCompare(a.term);
+      } else if (sortBy === "studyTime") {
+        return sortOrder === "asc"
+          ? new Date(a.last_review_at || 0).getTime() -
+              new Date(b.last_review_at || 0).getTime()
+          : new Date(b.last_review_at || 0).getTime() -
+              new Date(a.last_review_at || 0).getTime();
+      } else {
+        return sortOrder === "asc"
+          ? a.difficulty - b.difficulty
+          : b.difficulty - a.difficulty;
+      }
+    });
+  }, [words, sortBy, sortOrder]);
+
+  // 当排序结果变化时更新过滤后的单词列表
+  useEffect(() => {
+    setFilteredWords(sortedWords);
+  }, [sortedWords]);
 
   const fetchCategories = async () => {
     const { data, error } = await supabase.from("categories").select("*");
@@ -174,14 +184,11 @@ export default function WordListPage() {
       return;
     }
 
-    console.log("Fetched categories:", data); // 添加日志
-
     // 如果用户没有分类或只有"其他"分类，更新为新的分类列表
     if (!data || data.length <= 1) {
       await createDefaultCategoriesForUser();
       // 重新获取分类
       const { data: newData } = await supabase.from("categories").select("*");
-      console.log("New categories after creation:", newData); // 添加日志
       setCategories(newData || []);
     } else {
       // 检查是否需要更新分类
@@ -193,7 +200,6 @@ export default function WordListPage() {
         await updateUserCategories(data);
         // 重新获取更新后的分类
         const { data: updatedData } = await supabase.from("categories").select("*");
-        console.log("Updated categories:", updatedData); // 添加日志
         setCategories(updatedData || []);
       } else {
         setCategories(data || []);
@@ -271,47 +277,11 @@ export default function WordListPage() {
     if (error) console.error("Error creating default categories:", error);
   };
 
-  useEffect(() => {
-    // Apply filters and sorting whenever dependencies change
-    // 监听筛选条件变化
-    useEffect(() => {
-      fetchWords();
-    }, [currentPage, pageSize, selectedCategory, selectedPos, searchQuery]);
-    
-    // 移除原有的前端筛选逻辑，只保留排序
-    useEffect(() => {
-      let result = [...words];
-      
-      // 只处理排序
-      result.sort((a, b) => {
-        if (sortBy === "alphabetical") {
-          return sortOrder === "asc"
-            ? a.term.localeCompare(b.term)
-            : b.term.localeCompare(a.term);
-        } else if (sortBy === "studyTime") {
-          return sortOrder === "asc"
-            ? new Date(a.last_review_at || 0).getTime() -
-                new Date(b.last_review_at || 0).getTime()
-            : new Date(b.last_review_at || 0).getTime() -
-                new Date(a.last_review_at || 0).getTime();
-        } else {
-          return sortOrder === "asc"
-            ? a.difficulty - b.difficulty
-            : b.difficulty - a.difficulty;
-        }
-      });
-    
-      setFilteredWords(result);
-    }, [words, sortBy, sortOrder]);
-  }, [words, searchQuery, selectedCategory, selectedPos, sortBy, sortOrder]);
-
   const handleAddWord = async (
     newWord: Omit<Word, "id" | "created_at" | "user_id">
   ) => {
     setIsSubmitting(true);
     try {
-      console.log("Adding word with category:", newWord.category_id); // 添加日志
-
       // 获取当前用户ID
       const {
         data: { user },
@@ -339,8 +309,6 @@ export default function WordListPage() {
         toast.error(`添加失败：${error.message}`);
         return;
       }
-
-      console.log("Added word:", data); // 添加日志
 
       // Refresh the word list
       await fetchWords();
